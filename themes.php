@@ -1,0 +1,31 @@
+<?php
+/**
+ * This class is responsible for updating themes
+ */
+namespace WP_Updater;
+use WP_Error as WP_Error;
+
+class Themes extends Updater {
+    
+    /**
+     * Contains the information regarding the theme
+     *
+     * @access protected
+     */
+    protected $theme;
+    
+    /**
+     * Initializes the theme updater
+     *
+     * @param array $params The configuration parameters.
+     */
+    protected function initialize() {
+        
+        $this->theme    = wp_get_theme( basename(get_stylesheet_directory()) );
+        $this->version  = 
+        
+//        add_filter('pre_set_site_transient_update_themes', array($this, 'check') );
+//        add_filter('themes_api', array($this, 'call'), 10, 3);
+    }
+    
+}
