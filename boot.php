@@ -31,8 +31,10 @@ class Boot {
         
         // Default parameters 
         $defaults = array(
-            'url'       => '',
+            'license'   => ''       // An optional license key which needs to be checked before updating. Not used yet in this version.
+            'request'   => array()  // A custom request which can be send to inhouse repositories. Not used yet in this version.
             'type'      => 'theme',
+            'url'       => '',
             'verifySSL' => true
         );
         
@@ -73,13 +75,16 @@ class Boot {
     
     /**
      * Checks our parameters and see if we have everything
+     * @todo Adds a sanitizer which checks urls, so that they are correct.
      *
      * @return boolean true upon success, object WP_Error upon failure
      */
     private function checkParameters() {
-        return true;
         
-        return new WP_Error( 'missing', __( "You are missing essential parameters.", "wp-updater" ) );
+        if( empty($this->params['url']) )
+            return new WP_Error( 'missing', __( "You are missing the url where to update from.", "wp-updater" ) );
+        
+        return true;
         
     }
     

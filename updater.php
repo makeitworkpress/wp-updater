@@ -9,16 +9,23 @@ abstract class Updater {
     /**
      * The updater parameters
      *
-     * @access Private
+     * @access private
      */
     private $params;
     
     /**
-     * Containts the current version of the theme or plugin
+     * Contains the current version of the theme or plugin
      *
-     * @access Private
+     * @access protected
      */
-    protected $version;    
+    protected $version;
+    
+    /**
+     * Contains the slug for the theme or plugin
+     *
+     * @access protected
+     */
+    protected $slug;       
     
     /**
      * Constructs the class
@@ -63,12 +70,13 @@ abstract class Updater {
 	 * @param  object  $args       The arguments with suppied information
 	 * @return object  $response   Response with the information
      */
-    public final function call( $def, $action, $arg ) {
+    public final function info( $def, $action, $arg ) {
         
     }
     
     /**
      * Checks the source and set-ups which API to use, and subsequently retrieves data.
+     * @todo We might move this into a seperate class for each platform later
      *
      * @param string    $source The url where to update from
      * @param array     $tokens Optional tokens to verify a request from the given API
