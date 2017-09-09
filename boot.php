@@ -31,10 +31,10 @@ class Boot {
         
         // Default parameters 
         $defaults = array(
-            'license'   => ''       // An optional license key which needs to be checked before updating. Not used yet in this version.
-            'request'   => array()  // A custom request which can be send to inhouse repositories. Not used yet in this version.
+            'request'   => array( 'method' => 'get' ),  // The request can be customized with custom parameters.
+            'source'    => '',                          // The source, where to retrieve the update from
+            'token'     => '',                          // An optional license key or token which needs to be checked before updating.
             'type'      => 'theme',
-            'url'       => '',
             'verifySSL' => true
         );
         

@@ -4,6 +4,6 @@
  */
 namespace WP_Updater;
 
-class Plugins extends Updater {
+class Plugin_Updater extends Updater {
     
 }

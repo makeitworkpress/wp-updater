@@ -4,7 +4,7 @@
  */
 namespace WP_Updater;
 
-class Themes extends Updater {
+class Theme_Updater extends Updater {
     
     /**
      * Contains the information regarding the theme
@@ -21,12 +21,11 @@ class Themes extends Updater {
     protected function initialize() {
         
         $this->theme    = wp_get_theme( basename(get_stylesheet_directory()) );
-        
         $this->slug     = $this->theme->stylesheet;
         $this->version  = $this->theme->version;
         
-        add_filter('pre_set_site_transient_update_themes', array($this, 'check') );
-        add_filter('themes_api', array($this, 'call'), 10, 3);
+        add_filter( 'pre_set_site_transient_update_themes', array($this, 'check') );
+        add_filter( 'themes_api', array($this, 'info'), 10, 3 );
     }
     
 }
