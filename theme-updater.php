@@ -24,8 +24,10 @@ class Theme_Updater extends Updater {
         $this->slug     = $this->theme->stylesheet;
         $this->version  = $this->theme->version;
         
+        $data = $this->source();
+        
         add_filter( 'pre_set_site_transient_update_themes', array($this, 'check') );
-        add_filter( 'themes_api', array($this, 'info'), 10, 3 );
+        
     }
     
 }

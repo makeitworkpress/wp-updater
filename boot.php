@@ -31,7 +31,7 @@ class Boot {
         
         // Default parameters 
         $defaults = array(
-            'request'   => array( 'method' => 'get' ),  // The request can be customized with custom parameters.
+            'request'   => array( 'method' => 'GET' ),  // The request can be customized with custom parameters.
             'source'    => '',                          // The source, where to retrieve the update from
             'token'     => '',                          // An optional license key or token which needs to be checked before updating.
             'type'      => 'theme',
@@ -50,11 +50,11 @@ class Boot {
         
         // Runs the scripts for updating a theme
         if( $this->params['type'] == 'theme' )
-            $this->updateTheme();
+            new Theme_Updater( $this->params );
         
         // Runs the scripts for updating a plugin
         if( $this->params['type'] == 'plugin' )
-            $this->updatePlugin();
+            new Plugin_Updater( $this->params );
         
         /**
          * Check if we need to verify SSL
@@ -66,7 +66,7 @@ class Boot {
          */
         if( $this->params['verifySSL'] ) {
             add_filter( 'http_request_args', function( $args, $url ) {
-                $args[ 'sslverify' ] = $this->config[ 'sslverify' ];
+                $args[ 'sslverify' ] = true;
                 return $args;            
             }, 10, 2 );
         }
@@ -81,25 +81,14 @@ class Boot {
      */
     private function checkParameters() {
         
-        if( empty($this->params['url']) )
+        if( empty($this->params['type']) )
+            return new WP_Error( 'missing', __( "You are missing what to update, either theme or plugin", "wp-updater" ) );        
+        
+        if( empty($this->params['source']) )
             return new WP_Error( 'missing', __( "You are missing the url where to update from.", "wp-updater" ) );
         
         return true;
         
-    }
-    
-    /**
-     * Updates a theme
-     */
-    private function updateTheme() {
-        new Themes( $this->params );      
-    }
-    
-    /**
-     * Updates a plugin
-     */
-    private function updatePlugin() {
-        new Plugins( $this->params );    
     }
     
 }
