@@ -120,7 +120,7 @@ abstract class Updater {
             return $transient;
         
         // Request our source and compare if we have the most recent version
-        $data = $this->requestSource;
+        $data = $this->requestSource();
         
         if( $data && version_compare($this->version, $data->new_version, '<') ) {
             $transient->response[$this->slug] = $this->config['type'] == 'theme' ? (array) $data : $data;
