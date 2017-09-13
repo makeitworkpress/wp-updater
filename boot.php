@@ -92,11 +92,13 @@ class Boot {
          * @param object    $upgrader       The upgrader object
          */
         add_filter( 'upgrader_source_selection', function( $source, $remote_source = NULL, $upgrader = NULL ) {
+                            
+            var_dump( $correctSource );
+            var_dump( $remote_source );
+            var_dump( $upgrader );
             
             if( isset($source, $remote_source, $upgrader->skin->theme) ) {
                 $correctSource = $remote_source . '/' . $upgrader->skin->theme . '/';
-                
-                var_dump( $correctSource );
                 
                 if( rename($source, $correctSource) ) {
                     return $correctSource;
