@@ -94,6 +94,8 @@ class Boot {
         add_filter( 'upgrader_source_selection', function( $source, $remote_source = NULL, $upgrader = NULL ) {
             
             var_dump( $source );
+            var_dump( $upgrader );
+            var_dump( $remote_source );
             
 //            if( isset($source, $remote_source, $upgrader->skin->theme) ) {
 //                $corrected_source = $remote_source . '/' . $upgrader->skin->theme . '/';
@@ -105,6 +107,9 @@ class Boot {
 //                    return new WP_Error();
 //                }
 //            }
+            
+            // Stop upgrading
+            die();
             
             return $source; 
             
