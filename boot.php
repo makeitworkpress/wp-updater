@@ -96,6 +96,8 @@ class Boot {
             if( isset($source, $remote_source, $upgrader->skin->theme) ) {
                 $correctSource = $remote_source . '/' . $upgrader->skin->theme . '/';
                 
+                var_dump( $correctSource );
+                
                 if( rename($source, $correctSource) ) {
                     return $correctSource;
                 } else {
