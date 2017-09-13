@@ -6,21 +6,23 @@ namespace WP_Updater;
 use WP_Error as WP_Error;
 use stdClass as stdClass;
 
+defined( 'ABSPATH' ) or die( 'Go eat veggies!' );
+
 abstract class Updater {
     
     /**
-     * Contains optional parameters for the request to the remove source
+     * Contains our updater configurations
      *
-     * @access protected
+     * @access private
      */
-    public $platform;    
+    private $config;      
     
     /**
      * Contains optional parameters for the request to the remove source
      *
-     * @access protected
+     * @access private
      */
-    private $request;
+    private $platform;
     
     /**
      * Contains the slug for the theme or plugin
@@ -34,21 +36,7 @@ abstract class Updater {
      *
      * @access protected
      */
-    private $source;
-    
-    /**
-     * Contains an optional token used for licensed updating
-     *
-     * @access protected
-     */
-    private $token;   
-    
-    /**
-     * Contains the definite url of a theme or plugin
-     *
-     * @access protected
-     */
-    private $url;    
+    private $source;  
     
     /**
      * Contains the current version of the theme or plugin
@@ -64,12 +52,12 @@ abstract class Updater {
      * @param array $params The configuration parameters.
      */
     public function __construct( $params ) {
-        $this->request  = $params['request'];
-        $this->token    = $params['token'];  
-        $this->url      = $params['source'];  
+        
+        // Set our defaukt attributes
+        $this->config   = $params;
         
         // Determines which platform we are on. Sets $this->platform to the given platform
-        $this->platform();
+        $this->platform = $this->getPlatform();
         
         // Initializes the updater from the child class.
         $this->initialize();
@@ -77,28 +65,30 @@ abstract class Updater {
     }
     
     /**
-     * Sets our platform based on a source url
+     * Gets our platform based on a source url and also formats the source for the platform.
+     * The source is the url where the request is made to.
      */
-    private function platform() {
+    private function getPlatform() {
+        
+        // Sets our default source, so that source is always set
+        $this->source   = $this->config['source'];
         
         // We have github as platform
-        if( strpos( $this->url, 'github.com') !== false ) {
-            $this->platform = 'github';
+        if( strpos( $this->config['source'], 'github.com') !== false ) {
+            preg_match( '/http(s)?:\/\/github.com\/(?<username>[\w-]+)\/(?<repo>[\w-]+)$/', $this->config['source'], $matches );
             
-            preg_match( '/http(s)?:\/\/github.com\/(?<username>[\w-]+)\/(?<repo>[\w-]+)$/', $this->url, $matches );
-            
-            if( !isset($matches['username']) || ! isset($matches['repo']) )
+            if( ! isset($matches['username']) || ! isset($matches['repo']) )
                 return new WP_Error( 'wrong', __('Your GitHub Repo is not properly formatted!', 'wp-updater') );
             
             // Reformat source to the API
             $this->source = sprintf( 'https://api.github.com/repos/%s/%s/tags', urlencode($matches['username']), urlencode($matches['repo']) );
             
-        } elseif( strpos( $this->url, 'gitlab.com') !== false ) {
-            $this->platform = 'gitlab';
-            $this->source   = $this->url;
+            return 'github';
+            
+        } elseif( strpos( $this->config['source'], 'gitlab.com') !== false ) {
+            return 'gitlab';
         } else {
-            $this->platform = 'custom';
-            $this->source   = $this->url;
+            return 'custom';
         } 
         
     }
@@ -124,13 +114,19 @@ abstract class Updater {
      * @param   object $transient   The transient stored for update checking
      * @return  object $transient   The transient stored for update checking
      */
-    public final function check( $transient ) {
+    public final function checkUpdate( $transient ) {
         
         if( empty($transient->checked) )
             return $transient;
         
-        // Our current version
-        $version = $transient->checked[$this->slug];
+        // Request our source and compare if we have the most recent version
+        $data = $this->requestSource;
+        
+        if( $data && version_compare($this->version, $data->new_version, '<') ) {
+            $transient->response[$this->slug] = $this->config['type'] == 'theme' ? (array) $data : $data;
+        }
+        
+        return $transient;
         
     }
     
@@ -139,11 +135,11 @@ abstract class Updater {
      *
      * @return array/boolean/object $data The data with information about the version, package and url 
      */
-    protected function source() {
+    protected function requestSource() {
         
         $data = false;   
         
-        $request = wp_remote_request( $this->source, $this->request );
+        $request = wp_remote_request( $this->source, $this->config['request'] );
         
         // We have an error
         if( is_wp_error($request) || wp_remote_retrieve_response_code( $request ) !== 200 )
@@ -153,9 +149,14 @@ abstract class Updater {
          * Format the data according to our platform
          */
         switch( $this->platform ) {
+                
+            /**
+             * We utilize the github response using the tags api.
+             */                
             case 'github':
                 $response = json_decode( $request['body'] );
                 
+                // We don't have any tags
                 if( count($response) == 0 )
                     return false;
                 
@@ -168,12 +169,17 @@ abstract class Updater {
                 $data->new_version  = $newest->name;
                 $data->package      = $newest->zipball_url;
                 $data->slug         = $this->slug;
-                $data->url          = $this->url;
+                $data->url          = $this->config['source'];
                 
             case 'gitlab':
                 break;
+                
+            /**
+             * For default urls, we assume the body response is a json response 
+             * with new_version, package, slug and url as default properties.
+             */
             default:
-                $data = $request['body'];
+                $data = json_decode($request['body']);
         }
         
         return $data;

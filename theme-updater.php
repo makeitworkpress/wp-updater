@@ -4,6 +4,8 @@
  */
 namespace WP_Updater;
 
+defined( 'ABSPATH' ) or die( 'Go eat veggies!' );
+
 class Theme_Updater extends Updater {
     
     /**
@@ -24,9 +26,7 @@ class Theme_Updater extends Updater {
         $this->slug     = $this->theme->stylesheet;
         $this->version  = $this->theme->version;
         
-        $data = $this->source();
-        
-        add_filter( 'pre_set_site_transient_update_themes', array($this, 'check') );
+        add_filter( 'pre_set_site_transient_update_themes', array($this, 'checkUpdate') );
         
     }
     
