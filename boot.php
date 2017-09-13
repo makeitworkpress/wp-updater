@@ -93,24 +93,18 @@ class Boot {
          */
         add_filter( 'upgrader_source_selection', function( $source, $remote_source = NULL, $upgrader = NULL ) {
             
-            var_dump( $source );
-            var_dump( $upgrader );
-            var_dump( $remote_source );
-            
-//            if( isset($source, $remote_source, $upgrader->skin->theme) ) {
-//                $corrected_source = $remote_source . '/' . $upgrader->skin->theme . '/';
-//                
-//                if( @rename($source, $corrected_source) ){
-//                    return $corrected_source;
-//                } else {
-//                    $upgrader->skin->feedback("Unable to rename downloaded theme.");
-//                    return new WP_Error();
-//                }
-//            }
-            
-            // Stop upgrading
-            die();
-            
+            if( isset($source, $remote_source, $upgrader->skin->theme) ) {
+                $correctSource = $remote_source . '/' . $upgrader->skin->theme . '/';
+                
+                if( rename($source, $correctSource) ) {
+                    return $correctSource;
+                } else {
+                    $upgrader->skin->feedback( "Unable to rename downloaded theme." );
+                    return new WP_Error();
+                }
+                
+            }
+
             return $source; 
             
         }, 10, 3 );
