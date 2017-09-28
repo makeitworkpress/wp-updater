@@ -22,7 +22,7 @@ class Theme_Updater extends Updater {
      */
     protected function initialize() {
         
-        $this->theme    = wp_get_theme( basename(get_stylesheet_directory()) );
+        $this->theme    = wp_get_theme( basename(get_template_directory()) );
         $this->slug     = $this->theme->stylesheet;
         $this->version  = $this->theme->version;
         
