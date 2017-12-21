@@ -3,6 +3,7 @@
  * This class is responsible for updating themes
  */
 namespace MakeitWorkPress\WP_Updater;
+use MakeitWorkPress\WP_Updater\Updater as Updater;
 
 defined( 'ABSPATH' ) or die( 'Go eat veggies!' );
 
