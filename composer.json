@@ -1,3 +1,22 @@
 {
-    "name": "wp-updater"
+    "name": "makeitworkpress/wp-updater",
+    "description": "Simple class to allow WordPress theme and plugin updates over Github or Gitlab",
+    "license": "GPL",
+    "require": {
+        "php": ">=5.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "MakeitWorkPress\\WP_Updater\\": "src"
+        }
+    },
+    "homepage": "https://github.com/makeitworkpress/wp-updater",
+    "authors": [ 
+        {
+            "name": "Michiel Tramper",
+            "email": "michiel@makeitworkpress.com",
+            "homepage": "https://www.makeitworkpress.com"
+
+        } 
+    ]           
 }

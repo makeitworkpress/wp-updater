@@ -2,7 +2,7 @@
 /**
  * This class allows you to update themes and plugin through hosted versions on GitHub
  */
-namespace WP_Updater;
+namespace MakeitWorkPress\WP_Updater;
 use WP_Error as WP_Error;
 
 defined( 'ABSPATH' ) or die( 'Go eat veggies!' );

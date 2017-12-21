@@ -2,7 +2,7 @@
 /**
  * This class defines how the Themes and Plugin updater should construct their class
  */
-namespace WP_Updater;
+namespace MakeitWorkPress\WP_Updater;
 use WP_Error as WP_Error;
 use stdClass as stdClass;
 

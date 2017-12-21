@@ -2,7 +2,7 @@
 /**
  * This class is responsible for updating themes
  */
-namespace WP_Updater;
+namespace MakeitWorkPress\WP_Updater;
 
 defined( 'ABSPATH' ) or die( 'Go eat veggies!' );
 
