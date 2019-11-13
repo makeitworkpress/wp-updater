@@ -77,8 +77,9 @@ abstract class Updater {
         if( strpos( $this->config['source'], 'github.com') !== false ) {
             preg_match( '/http(s)?:\/\/github.com\/(?<username>[\w-]+)\/(?<repo>[\w-]+)$/', $this->config['source'], $matches );
             
-            if( ! isset($matches['username']) || ! isset($matches['repo']) )
+            if( ! isset($matches['username']) || ! isset($matches['repo']) ) {
                 return new WP_Error( 'wrong', __('Your GitHub Repo is not properly formatted!', 'wp-updater') );
+            }
             
             // Reformat source to the API
             $this->source = sprintf( 'https://api.github.com/repos/%s/%s/tags', urlencode($matches['username']), urlencode($matches['repo']) );
@@ -116,8 +117,9 @@ abstract class Updater {
      */
     public final function checkUpdate( $transient ) {
         
-        if( empty($transient->checked) )
+        if( empty($transient->checked) ) {
             return $transient;
+        }
         
         // Request our source and compare if we have the most recent version
         $data = $this->requestSource();
@@ -142,8 +144,9 @@ abstract class Updater {
         $request = wp_remote_request( $this->source, $this->config['request'] );
         
         // We have an error
-        if( is_wp_error($request) || wp_remote_retrieve_response_code( $request ) !== 200 )
+        if( is_wp_error($request) || wp_remote_retrieve_response_code( $request ) !== 200 ) {
             return $data;
+        }
         
         /**
          * Format the data according to our platform
@@ -180,6 +183,7 @@ abstract class Updater {
              */
             default:
                 $data = json_decode($request['body']);
+                
         }
         
         return $data;
