@@ -38,21 +38,19 @@ class Boot {
             return;
         
         // Default parameters 
-        $defaults = array(
-            'request'   => array( 'method' => 'GET' ),  // The request can be customized with custom parameters, such as a licensing token needed in the request
+        $defaults = [
+            'request'   => ['method' => 'GET'],         // The request can be customized with custom parameters, such as a licensing token needed in the request
             'source'    => '',                          // The source, where to retrieve the update from
             'type'      => 'theme',                     // The type to update, either theme or plugin
             'verifySSL' => true
-        );
+        ];
         
         $this->config = wp_parse_args( $params, $defaults );
         
         /** 
          * If we are missing correctly formatted parameters, bail out.
          */
-        $check = $this->checkParameters();
-        
-        if( is_wp_error( $check ) ) {
+        if( is_wp_error( $this->checkParameters() ) ) {
             echo $check->get_error_message();
             return;
         }
@@ -103,7 +101,7 @@ class Boot {
                 if( rename($source, $correctSource) ) {
                     return $correctSource;
                 } else {
-                    $upgrader->skin->feedback( "Unable to rename downloaded theme." );
+                    $upgrader->skin->feedback( __("Unable to rename downloaded theme.", "wp-updater") );
                     return new WP_Error();
                 }
                 
@@ -123,14 +121,17 @@ class Boot {
      */
     private function checkParameters() {
         
-        if( $this->config['type'] !== 'theme' && $this->config['type'] !== 'plugin' )
-            return new WP_Error( 'wrong', __( "Your updater type is not theme or plugin!", "wp-updater" ) );         
+        if( $this->config['type'] !== 'theme' && $this->config['type'] !== 'plugin' ) {
+            return new WP_Error( 'wrong', __( "Your updater type is not theme or plugin!", "wp-updater" ) );  
+        }       
         
-        if( empty($this->config['type']) )
-            return new WP_Error( 'missing', __( "You are missing what to update, either theme or plugin.", "wp-updater" ) );        
+        if( empty($this->config['type']) ) {
+            return new WP_Error( 'missing', __( "You are missing what to update, either theme or plugin.", "wp-updater" ) );  
+        }      
         
-        if( empty($this->config['source']) )
+        if( empty($this->config['source']) ) {
             return new WP_Error( 'missing', __( "You are missing the url where to update from.", "wp-updater" ) );
+        }
         
         return true;
         

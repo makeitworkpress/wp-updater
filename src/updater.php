@@ -32,7 +32,7 @@ abstract class Updater {
     protected $slug;     
     
     /**
-     * Contains the source of the theme or plugin and is updated to the url where a request is being made to.
+     * Contains the source of the theme or plugin and is updated from the url where a request is being made to.
      *
      * @access protected
      */
@@ -56,13 +56,17 @@ abstract class Updater {
         // Set our defaukt attributes
         $this->config   = $params;
         
-        // Determines which platform we are on. Sets $this->platform to the given platform
-        $this->platform = $this->getPlatform();
-        
         // Initializes the updater from the child class.
         $this->initialize();
         
     }
+
+    /**
+     * Determines the use of an initialize function
+     *
+     * @param array $params Optional parameters whichare passed to the class     
+     */
+    abstract protected function initialize();      
     
     /**
      * Gets our platform based on a source url and also formats the source for the platform.
@@ -92,22 +96,7 @@ abstract class Updater {
             return 'custom';
         } 
         
-    }
-    
-    
-    /**
-     * Formats the received file into a usuable source for the WordPress upgrader.
-     */
-    public final  function format( $source, $remote_source = NULL, $upgrader = NULL ) {
-        // add_filter('upgrader_source_selection', 'format', 10, 3); // Apply like this     
-    }      
-    
-    /**
-     * Determines the use of an initialize function
-     *
-     * @param array $params Optional parameters whichare passed to the class     
-     */
-    abstract protected function initialize();    
+    } 
 
     /**
      * Checks if we need to update and performs an update when necessary
@@ -121,8 +110,15 @@ abstract class Updater {
             return $transient;
         }
         
-        // Request our source and compare if we have the most recent version
-        $data = $this->requestSource();
+        // Check our transient for storing updates
+        if( false == $data = get_transient('wp_updater_' . sanitize_key($this->slug)) ) {
+
+            // Request our source and compare if we have the most recent version
+            $data = $this->requestSource();
+
+            set_transient( 'wp_updater_' . sanitize_key($this->slug), $data , 43200 );
+
+        }
         
         if( $data && version_compare($this->version, $data->new_version, '<') ) {
             $transient->response[$this->slug] = $this->config['type'] == 'theme' ? (array) $data : $data;
@@ -139,14 +135,17 @@ abstract class Updater {
      */
     protected function requestSource() {
         
-        $data = false;   
+        $data       = false;   
         
-        $request = wp_remote_request( $this->source, $this->config['request'] );
+        $request    = wp_remote_request( $this->source, $this->config['request'] );
         
         // We have an error
         if( is_wp_error($request) || wp_remote_retrieve_response_code( $request ) !== 200 ) {
             return $data;
         }
+        
+        // Determines which platform we are on. Sets $this->platform to the given platform
+        $this->platform = $this->getPlatform();
         
         /**
          * Format the data according to our platform

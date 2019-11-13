@@ -41,10 +41,10 @@ class Plugin_Updater extends Updater {
         }
 
         // Retrieve plugin information. The assumption is that folder and plugin filename are similar.
-        $this->plugin   = get_file_data( $file, array('version' => 'Version') );
+        $this->plugin   = get_file_data( $file, ['version' => 'Version'] );
         $this->version  = $this->plugin['version'];
 
-        add_filter( 'pre_set_site_transient_update_plugins', array($this, 'checkUpdate') );
+        add_filter( 'site_transient_update_plugins', [$this, 'checkUpdate'] );
         
     }
     
