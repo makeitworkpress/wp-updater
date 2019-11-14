@@ -148,7 +148,7 @@ abstract class Updater {
         $request    = wp_remote_request( $this->source, $this->config['request'] );
 
         // We have no error, continue
-        if( ! is_wp_error($request) && ! wp_remote_retrieve_response_code( $request ) !== 200 && ! empty($remote['body']) ) {
+        if( ! is_wp_error($request) && ! wp_remote_retrieve_response_code( $request ) !== 200 && ! empty($request['body']) ) {
 
             /**
              * Format the data according to our platform
