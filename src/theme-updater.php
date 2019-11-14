@@ -27,7 +27,7 @@ class Theme_Updater extends Updater {
         $this->slug     = sanitize_title($this->theme->stylesheet);
         $this->version  = $this->theme->version;
         
-        add_filter( 'pre_set_site_transient_update_themes', array($this, 'checkUpdate') );
+        add_filter( 'site_transient_update_themes', array($this, 'checkUpdate') );
         
     }
     

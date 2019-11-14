@@ -34,11 +34,13 @@ class Boot {
     public function __construct( $params ) {
         
         // This script only works in admin context
-        if( ! is_admin() )
+        if( ! is_admin() ) {
             return;
+        }
         
         // Default parameters 
         $defaults = [
+            'cache'     => 43200,                       // The default cache lifetime for update requests
             'request'   => ['method' => 'GET'],         // The request can be customized with custom parameters, such as a licensing token needed in the request
             'source'    => '',                          // The source, where to retrieve the update from
             'type'      => 'theme',                     // The type to update, either theme or plugin

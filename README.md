@@ -11,12 +11,12 @@ After you have correctly included all WP Updater script files or used an autoloa
 
 For plugins:
 ```php
-    $updater = new MakeitWorkPress\WP_Updater\Boot(['type' => 'plugin', 'source' => 'https://github.com/yourname/plugin-on-github.git']);
+    $updater = new MakeitWorkPress\WP_Updater\Boot(['type' => 'plugin', 'source' => 'https://github.com/yourname/plugin-on-github']);
 ```
 
 And for themes:
 ```php
-    $updater = new MakeitWorkPress\WP_Updater\Boot(['type' => 'theme', 'source' => 'https://github.com/yourname/plugin-on-github.git']);
+    $updater = new MakeitWorkPress\WP_Updater\Boot(['type' => 'theme', 'source' => 'https://github.com/yourname/theme-on-github']);
 ```
 
 There are few things that should be noted:

@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) or die( 'Go eat veggies!' );
 abstract class Updater {
     
     /**
-     * Contains our updater configurations
+     * Contains our updater configurations, as inherited from the loader
      *
      * @access private
      */
@@ -25,21 +25,21 @@ abstract class Updater {
     private $platform;
     
     /**
-     * Contains the slug for the theme or plugin
+     * Contains the slug for the theme or plugin. Should be set by the child class.
      *
      * @access protected
      */
     protected $slug;     
     
     /**
-     * Contains the source of the theme or plugin and is updated from the url where a request is being made to.
+     * Contains the source of the theme or plugin where the api request is made to.
      *
      * @access protected
      */
     private $source;  
     
     /**
-     * Contains the current version of the theme or plugin
+     * Contains the current version of the theme or plugin. Should be set by the child class.
      *
      * @access protected
      */
@@ -55,9 +55,15 @@ abstract class Updater {
         
         // Set our defaukt attributes
         $this->config   = $params;
+
+        // Determines which platform we are on. Returns the given platform and also sets $this->source to the source of the download.
+        $this->platform = $this->getPlatform();        
         
         // Initializes the updater from the child class.
         $this->initialize();
+
+        // Removes the transient or cache after ann update has executed
+        add_action( 'upgrader_process_complete', [$this, 'clearTransient'], 10, 2 );
         
     }
 
@@ -110,18 +116,13 @@ abstract class Updater {
             return $transient;
         }
         
-        // Check our transient for storing updates
-        if( false == $data = get_transient('wp_updater_' . sanitize_key($this->slug)) ) {
+        // Request our source and compare if we have the most recent version
+        $data = $this->requestSource();
 
-            // Request our source and compare if we have the most recent version
-            $data = $this->requestSource();
-
-            set_transient( 'wp_updater_' . sanitize_key($this->slug), $data , 43200 );
-
-        }
         
+        // If we are updating a theme, the slug for the theme will be used. Otherwise, the folder + plugin file is used.
         if( $data && version_compare($this->version, $data->new_version, '<') ) {
-            $transient->response[$this->slug] = $this->config['type'] == 'theme' ? (array) $data : $data;
+            $transient->response[$data->plugin ? $data->plugin : $data->slug] = $this->config['type'] == 'theme' ? (array) $data : $data;
         }
         
         return $transient;
@@ -135,58 +136,77 @@ abstract class Updater {
      */
     protected function requestSource() {
         
-        $data       = false;   
-        
-        $request    = wp_remote_request( $this->source, $this->config['request'] );
-        
-        // We have an error
-        if( is_wp_error($request) || wp_remote_retrieve_response_code( $request ) !== 200 ) {
+        // Check our transient before retrieving remote updates
+        $data       = get_transient( 'wp_updater_' . sanitize_key($this->slug) );
+
+        // Return early with data from our transient
+        if( $data ) { 
             return $data;
-        }
+        }       
         
-        // Determines which platform we are on. Sets $this->platform to the given platform
-        $this->platform = $this->getPlatform();
-        
-        /**
-         * Format the data according to our platform
-         */
-        switch( $this->platform ) {
-                
+        // Otherwise, do the remote request
+        $request    = wp_remote_request( $this->source, $this->config['request'] );
+
+        // We have no error, continue
+        if( ! is_wp_error($request) && ! wp_remote_retrieve_response_code( $request ) !== 200 && ! empty($remote['body']) ) {
+
             /**
-             * We utilize the github response using the tags api.
-             */                
-            case 'github':
-                $response = json_decode( $request['body'] );
-                
-                // We don't have any tags
-                if( count($response) == 0 )
-                    return false;
-                
-                usort( $response, function($a, $b) {
-                    return strcmp( $a->name, $b->name );   
-                } );
-                                
-                $newest             = array_pop( $response );
-                $data               = new stdClass();
-                $data->new_version  = $newest->name;
-                $data->package      = $newest->zipball_url;
-                $data->slug         = $this->slug;
-                $data->url          = $this->config['source'];
-                
-            case 'gitlab':
-                break;
-                
-            /**
-             * For default urls, we assume the body response is a json response 
-             * with new_version, package, slug and url as default properties.
+             * Format the data according to our platform
              */
-            default:
-                $data = json_decode($request['body']);
-                
+            switch( $this->platform ) {
+                    
+                /**
+                 * We utilize the github response using the tags api.
+                 */                
+                case 'github':
+                    $response = json_decode( $request['body'] );
+                    
+                    // We don't have any tags
+                    if( ! is_array($response) || count($response) == 0 ) {
+                        return false;
+                    }
+                    
+                    usort( $response, function($a, $b) {
+                        return strcmp( $a->name, $b->name );   
+                    } );
+                                    
+                    $newest             = array_pop( $response ); // Retrieves the latest release from Github
+                    $data               = new stdClass();
+                    $data->new_version  = $newest->name;
+                    $data->package      = $newest->zipball_url;
+                    $data->plugin       = $this->config['type'] == 'plugin'  ? $this->slug . '/' . $this->slug . '.php' : '';// Assumes that the plugin folder and plugin file have a similar name!
+                    $data->slug         = $this->slug;
+                    $data->url          = $this->config['source'];
+                    
+                case 'gitlab':
+                    break;
+                    
+                /**
+                 * For default urls, we assume the body response is a json response 
+                 * with new_version, package, slug and url as default properties.
+                 */
+                default:
+                    $data = json_decode($request['body']);
+                    
+            }            
+            
+            set_transient( 'wp_updater_' . sanitize_key($this->slug), $data , $this->config['cache'] );
+
         }
         
         return $data;
         
-    }   
+    } 
+    
+    /**
+     * Clears our cache after updating
+     */
+    public function clearTransient( $upgrader_object, $options ) {
+
+        if ( isset($options['action']) && in_array($options['type'], ['plugin', 'theme']) && $options['action'] == 'update' ) {
+            delete_transient( 'wp_updater_' . sanitize_key($this->slug) );
+        }
+
+    } 
 
 }
