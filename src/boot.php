@@ -87,7 +87,7 @@ class Boot {
             }, 10, 2 );
         }
         
-                
+                            
         /** 
          * Renames the source during upgrading, so it fits the structure from WordPress
          *
@@ -95,15 +95,24 @@ class Boot {
          * @param string    $remote_sourc   The remote source
          * @param object    $upgrader       The upgrader object
          */
-        add_filter( 'upgrader_source_selection', function( $source, $remote_source = NULL, $upgrader = NULL ) {
+        add_filter( 'upgrader_source_selection', function( $source, $remote_source = NULL, $upgrader = NULL, $hook_extra = NULL ) {
             
-            if( isset($source, $remote_source, $upgrader->skin->theme_info->stylesheet) ) {
-                $correctSource = $remote_source . '/' . $upgrader->skin->theme_info->stylesheet . '/';
+            if( isset($source, $remote_source) ) {
+
+                // Rename the source for plugins
+                if( isset($hook_extra['plugin']) && $hook_extra['plugin'] ) {
+                    $correctSource = trailingslashit( $remote_source ) . dirname( $hook_extra['plugin'] );
+                }
+
+                // Rename the source for themes
+                if( isset($upgrader->skin->theme_info->stylesheet) ) {
+                    $correctSource = trailingslashit( $remote_source . '/' . $upgrader->skin->theme_info->stylesheet );
+                }
                 
                 if( rename($source, $correctSource) ) {
                     return $correctSource;
                 } else {
-                    $upgrader->skin->feedback( __("Unable to rename downloaded theme.", "wp-updater") );
+                    $upgrader->skin->feedback( __("Unable to rename downloaded theme or plugin.", "wp-updater") );
                     return new WP_Error();
                 }
                 
@@ -111,9 +120,10 @@ class Boot {
 
             return $source; 
             
-        }, 10, 3 );
+        }, 10, 4 );
         
     }   
+    
     
     /**
      * Checks our parameters and see if we have everything
