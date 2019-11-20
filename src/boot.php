@@ -46,9 +46,6 @@ class Boot {
             'type'      => 'theme',                     // The type to update, either theme or plugin
             'verifySSL' => true
         ];
-
-        // Variable to save the respective updater object so we can access the slug in our source formatting filter
-        $updater  = '';
         
         $this->config = wp_parse_args( $params, $defaults );
         
