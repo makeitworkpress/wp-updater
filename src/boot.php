@@ -46,6 +46,9 @@ class Boot {
             'type'      => 'theme',                     // The type to update, either theme or plugin
             'verifySSL' => true
         ];
+
+        // Variable to save the respective updater object so we can access the slug in our source formatting filter
+        $updater  = '';
         
         $this->config = wp_parse_args( $params, $defaults );
         
@@ -64,12 +67,12 @@ class Boot {
 
         // Runs the scripts for updating a theme
         if( $this->config['type'] == 'theme' ) {
-            new Theme_Updater( $this->config );
+            $updater = new Theme_Updater( $this->config );
         }
         
         // Runs the scripts for updating a plugin
         if( $this->config['type'] == 'plugin' ) {
-            new Plugin_Updater( $this->config );
+            $updater = new Plugin_Updater( $this->config );
         }
         
         /**
@@ -95,17 +98,17 @@ class Boot {
          * @param string    $remote_sourc   The remote source
          * @param object    $upgrader       The upgrader object
          */
-        add_filter( 'upgrader_source_selection', function( $source, $remote_source = NULL, $upgrader = NULL, $hook_extra = NULL ) {
+        add_filter( 'upgrader_source_selection', function( $source, $remote_source = NULL, $upgrader = NULL, $hook_extra = NULL ) use( $updater ) {
             
             if( isset($source, $remote_source) ) {
 
                 // Rename the source for plugins
-                if( isset($hook_extra['plugin']) && $hook_extra['plugin'] ) {
+                if( isset($hook_extra['plugin']) && $hook_extra['plugin'] == $updater->slug ) {
                     $correctSource = trailingslashit( $remote_source ) . dirname( $hook_extra['plugin'] );
                 }
 
                 // Rename the source for themes
-                if( isset($upgrader->skin->theme_info->stylesheet) ) {
+                if( isset($upgrader->skin->theme_info->stylesheet) && $upgrader->skin->theme_info->stylesheet == $updater->slug ) {
                     $correctSource = trailingslashit( $remote_source . '/' . $upgrader->skin->theme_info->stylesheet );
                 }
                 
