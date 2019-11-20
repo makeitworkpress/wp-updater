@@ -125,12 +125,12 @@ class Boot {
         if( isset($source, $remote_source) ) {
 
             // Retrieves the source for themes
-            if( $this->config['type'] == 'theme' && isset($upgrader->skin->theme_info->stylesheet) && $upgrader->skin->theme_info->stylesheet == $this->updater->slug ) {
+            if( isset($upgrader->skin->theme_info->stylesheet) && $upgrader->skin->theme_info->stylesheet ) {
                 $correctSource = trailingslashit( $remote_source . '/' . $upgrader->skin->theme_info->stylesheet );
             }
 
             // Retrieves for plugins
-            if( $this->config['type'] == 'plugin' && isset($hook_extra['plugin']) && $hook_extra['plugin'] == $this->updater->slug ) {
+            if( isset($hook_extra['plugin']) && $hook_extra['plugin'] ) {
                 $correctSource = trailingslashit( $remote_source ) . dirname( $hook_extra['plugin'] );
             } 
 
