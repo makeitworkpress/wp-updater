@@ -12,7 +12,6 @@ class Plugin_Updater extends Updater {
     
     /**
      * Contains the information regarding the plugin
-     *
      * @access protected
      */
     protected $plugin;

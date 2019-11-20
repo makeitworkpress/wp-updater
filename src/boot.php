@@ -17,11 +17,11 @@ class Boot {
      */
     private $config;
     
-	/**
-	 * Stores data retrieved from GitHub
-	 * @access private
-	 */
-	private $github;    
+    /**
+     * Contains the updater class for either a theme or plugin
+     * @access private
+     */
+    private $updater;    
     
     /**
      * Constructor
@@ -67,12 +67,12 @@ class Boot {
 
         // Runs the scripts for updating a theme
         if( $this->config['type'] == 'theme' ) {
-            $updater = new Theme_Updater( $this->config );
+            $this->updater = new Theme_Updater( $this->config );
         }
         
         // Runs the scripts for updating a plugin
         if( $this->config['type'] == 'plugin' ) {
-            $updater = new Plugin_Updater( $this->config );
+            $this->updater = new Plugin_Updater( $this->config );
         }
         
         /**
@@ -84,10 +84,7 @@ class Boot {
          * @return array $args
          */
         if( $this->config['verifySSL'] ) {
-            add_filter( 'http_request_args', function( $args, $url ) {
-                $args[ 'sslverify' ] = true;
-                return $args;            
-            }, 10, 2 );
+            add_filter( 'http_request_args', [$this, 'verifySSL'], 10, 2 );
         }
         
                             
@@ -98,34 +95,62 @@ class Boot {
          * @param string    $remote_sourc   The remote source
          * @param object    $upgrader       The upgrader object
          */
-        add_filter( 'upgrader_source_selection', function( $source, $remote_source = NULL, $upgrader = NULL, $hook_extra = NULL ) use( $updater ) {
-            
-            if( isset($source, $remote_source) ) {
+        add_filter( 'upgrader_source_selection', [$this, 'sourceSelection'] , 10, 4 );
+        
+    } 
 
-                // Rename the source for plugins
-                if( isset($hook_extra['plugin']) && $hook_extra['plugin'] == $updater->slug ) {
-                    $correctSource = trailingslashit( $remote_source ) . dirname( $hook_extra['plugin'] );
-                }
+    /**
+     * Filters our SSL verification to true
+     * 
+     * @param Array $args The arguments for the http request
+     * @param String $url  The url for the request
+     * @return Array $args The modified arguments
+     */
+    public function verifySSL( $args, $url ) {
+        $args[ 'sslverify' ] = true;
+        return $args;
+    }
+    
+    /**
+     * Updates our source selection for the upgrader
+     *
+     * @param string    $source         The upgrading destination source
+     * @param string    $remote_sourc   The remote source
+     * @param object    $upgrader       The upgrader object
+     * @param array     $hook_extra     The extra hook
+     * @return string     $source       The source
+     */
+    public function sourceSelection( $source, $remote_source = NULL, $upgrader = NULL, $hook_extra = NULL ) {
 
-                // Rename the source for themes
-                if( isset($upgrader->skin->theme_info->stylesheet) && $upgrader->skin->theme_info->stylesheet == $updater->slug ) {
-                    $correctSource = trailingslashit( $remote_source . '/' . $upgrader->skin->theme_info->stylesheet );
-                }
-                
-                if( rename($source, $correctSource) ) {
-                    return $correctSource;
-                } else {
-                    $upgrader->skin->feedback( __("Unable to rename downloaded theme or plugin.", "wp-updater") );
-                    return new WP_Error();
-                }
-                
+        if( isset($source, $remote_source) ) {
+
+            // Retrieves the source for themes
+            if( $this->config['type'] == 'theme' && isset($upgrader->skin->theme_info->stylesheet) && $upgrader->skin->theme_info->stylesheet == $this->updater->slug ) {
+                $correctSource = trailingslashit( $remote_source . '/' . $upgrader->skin->theme_info->stylesheet );
             }
 
-            return $source; 
-            
-        }, 10, 4 );
+            // Retrieves for plugins
+            if( $this->config['type'] == 'plugin' && isset($hook_extra['plugin']) && $hook_extra['plugin'] == $this->updater->slug ) {
+                $correctSource = trailingslashit( $remote_source ) . dirname( $hook_extra['plugin'] );
+            } 
+
+        }
         
-    }   
+        // We have an adjusted source
+        if( isset($correctSource) ) {
+                
+            if( rename($source, $correctSource) ) {
+                return $correctSource;
+            } else {
+                $upgrader->skin->feedback( __("Unable to rename downloaded theme or plugin.", "wp-updater") );
+                return new WP_Error();
+            }
+
+        }         
+        
+        return $source;
+
+    }
     
     
     /**

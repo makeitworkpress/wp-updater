@@ -11,7 +11,6 @@ class Theme_Updater extends Updater {
     
     /**
      * Contains the information regarding the theme
-     *
      * @access protected
      */
     protected $theme;
