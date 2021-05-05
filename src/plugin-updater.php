@@ -45,10 +45,7 @@ class Plugin_Updater extends Updater {
             $file, 
             ['version' => 'Version', 'name' => 'Plugin Name', 'url' => 'Plugin URI', 'description' => 'Description', 'author' => 'Author', 'author_url' => 'Author URI'] 
         );
-        $this->version  = $this->plugin['version'];
-
-        // Adds the updater for the transient process
-        add_filter( 'site_transient_update_plugins', [$this, 'checkUpdate'] );
+        $this->version  = $this->plugin['version'];  // Current version of the plugin
 
         // Ads additional information for the plugin information
         add_filter( 'plugins_api', [$this, 'pluginInfo'], 20, 3 );
@@ -78,10 +75,8 @@ class Plugin_Updater extends Updater {
         $response->author           = $this->plugin['author'];
         $response->author_profile   = $this->plugin['author_url'];
         $response->name             = $this->plugin['name'];
-        $response->sections         = [
-            'description' => $this->plugin['description']
-        ];
-        $response->slug     = $this->slug;
+        $response->sections         = ['description' => $this->plugin['description']];
+        $response->slug             = $this->slug;
 
         return $response;
 

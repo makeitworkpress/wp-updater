@@ -21,6 +21,24 @@ abstract class Updater {
      * @access private
      */
     private $platform;
+
+    /**
+     * Contains the transient name for the item to check
+     * @access private
+     */
+    private $transient;
+
+    /**
+     * Contains the source of the theme or plugin where the api request is made to.
+     * @access protected
+     */
+    private $source; 
+    
+    /**
+     * Contains the current version of the theme or plugin. Should be set by the child class.
+     * @access protected
+     */
+    protected $version;    
     
     /**
      * Contains the slug for the theme or plugin. Should be set by the child class.
@@ -29,43 +47,40 @@ abstract class Updater {
     public $slug;     
     
     /**
-     * Contains the source of the theme or plugin where the api request is made to.
-     * @access protected
-     */
-    private $source;  
-    
-    /**
-     * Contains the current version of the theme or plugin. Should be set by the child class.
-     * @access protected
-     */
-    protected $version;
-          
-    
-    /**
      * Constructs the class
      *
      * @param array $params The configuration parameters.
      */
-    public function __construct( $params ) {
+    public function __construct( Array $config = [] ) {
         
-        // Set our defaukt attributes
-        $this->config   = $params;
+        // Set our attributes
+        $this->config   = $config;
 
         // Determines which platform we are on. Returns the given platform and also sets $this->source to the source of the download.
         $this->platform = $this->getPlatform();        
         
-        // Initializes the updater from the child class.
+        // Initializes the updater from the child class, and defines the slug for the theme or plugin.
         $this->initialize();
+        $this->transient = 'wp_updater_' . md5(sanitize_key($this->slug));
 
         // Removes the transient or cache after ann update has executed
-        add_action( 'upgrader_process_complete', [$this, 'clearTransient'], 10, 2 );
+        if( $this->config['type'] == 'theme' ) {
+            add_filter( 'pre_set_site_transient_update_themes', array($this, 'checkUpdate') );
+            add_action( 'delete_site_transient_update_themes', [$this, 'clearTransient'], 10, 2 );
+        }
+
+        if( $this->config['type'] == 'plugin' ) {
+            add_filter( 'pre_set_site_transient_update_plugins', [$this, 'checkUpdate'] );
+            add_action( 'delete_site_transient_update_plugins', [$this, 'clearTransient'], 10, 2 );
+        }        
+
+        // Deletes our transients if we're force-checking the updater
+        $this->clearTransientForced();
         
     }
 
     /**
-     * Determines the use of an initialize function
-     *
-     * @param array $params Optional parameters whichare passed to the class     
+     * The initialize function is used by the plugin and theme updater class to define settings respectively
      */
     abstract protected function initialize();      
     
@@ -113,7 +128,6 @@ abstract class Updater {
         
         // Request our source and compare if we have the most recent version
         $data = $this->requestSource();
-
         
         // If we are updating a theme, the slug for the theme will be used. Otherwise, the folder + plugin file is used.
         if( $data && version_compare($this->version, $data->new_version, '<') ) {
@@ -132,7 +146,7 @@ abstract class Updater {
     protected function requestSource() {
         
         // Check our transient before retrieving remote updates
-        $data       = get_transient( 'wp_updater_' . sanitize_key($this->slug) );
+        $data       = get_transient( $this->transient );
 
         // Return early with data from our transient
         if( $data ) { 
@@ -158,7 +172,9 @@ abstract class Updater {
                     
                     // We don't have any tags
                     if( ! is_array($response) || count($response) == 0 ) {
-                        return false;
+                        $data               = new stdClass();
+                        $data->new_version  = 0;
+                        return $data;
                     }
                     
                     usort( $response, function($a, $b) {
@@ -169,11 +185,10 @@ abstract class Updater {
                     $data               = new stdClass();
                     $data->new_version  = $newest->name;
                     $data->package      = $newest->zipball_url;
-                    $data->plugin       = $this->config['type'] == 'plugin'  ? $this->slug . '/' . $this->slug . '.php' : '';// Assumes that the plugin folder and plugin file have a similar name!
+                    $data->plugin       = $this->config['type'] == 'plugin'  ? $this->slug . '/' . $this->slug . '.php' : ''; // Assumes that the plugin folder and plugin file have a similar name!
                     $data->slug         = $this->slug;
                     $data->url          = $this->config['source'];
                     
-                case 'gitlab':
                     break;
                     
                 /**
@@ -185,7 +200,7 @@ abstract class Updater {
                     
             }            
             
-            set_transient( 'wp_updater_' . sanitize_key($this->slug), $data , $this->config['cache'] );
+            set_transient( $this->transient, $data, $this->config['cache'] );
 
         }
         
@@ -194,14 +209,21 @@ abstract class Updater {
     } 
     
     /**
-     * Clears our cache after updating
+     * Clears our transient cache after updating
      */
-    public function clearTransient( $upgrader_object, $options ) {
-
-        if ( isset($options['action']) && in_array($options['type'], ['plugin', 'theme']) && $options['action'] == 'update' ) {
-            delete_transient( 'wp_updater_' . sanitize_key($this->slug) );
-        }
-
+    public function clearTransient() {
+        delete_transient( $this->transient );
     } 
+
+    /**
+     * Clears the transient when forced from the upgrader
+     */
+    private function clearTransientForced() {
+		global $pagenow;
+
+		if ( 'update-core.php' === $pagenow && isset($_GET['force-check']) ) {
+			$this->clearTransient();
+		}        
+    }
 
 }
