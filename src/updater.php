@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) or die( 'Go eat veggies!' );
 abstract class Updater {
     
     /**
-     * Contains our updater configurations, as inherited from the bootloader
+     * Contains our updater configurations, as inherited from the Boot::add
      * @access private
      */
     private $config;      
@@ -35,16 +35,22 @@ abstract class Updater {
     private $source; 
     
     /**
-     * Contains the current version of the theme or plugin. Should be set by the child class.
+     * Contains the current version of the theme or plugin, which is set by the Plugin_Updater or Theme_Updater child class.
      * @access protected
      */
     protected $version;    
     
     /**
-     * Contains the slug for the theme or plugin. Should be set by the child class.
+     * Contains the slug for the theme or plugin, which is set by the Plugin_Updater or Theme_Updater child class.
      * @access public
      */
-    public $slug;     
+    public $slug; 
+
+    /**
+     * Contains the folder for a given plugin, which is set by the Plugin_Updater child class
+     * @access public
+     */
+    public $folder;      
     
     /**
      * Constructs the class
@@ -61,11 +67,17 @@ abstract class Updater {
         
         // Initializes the updater from the child class, and defines the slug for the theme or plugin.
         $this->initialize();
+
+        // If we don't have a slug, bail out
+        if( ! $this->slug ) {
+            return;
+        }
+
         $this->transient = 'wp_updater_' . md5(sanitize_key($this->slug));
 
         // Removes the transient or cache after ann update has executed
         if( $this->config['type'] == 'theme' ) {
-            add_filter( 'pre_set_site_transient_update_themes', array($this, 'checkUpdate') );
+            add_filter( 'pre_set_site_transient_update_themes', [$this, 'checkUpdate'] );
             add_action( 'delete_site_transient_update_themes', [$this, 'clearTransient'], 10, 2 );
         }
 
@@ -185,7 +197,7 @@ abstract class Updater {
                     $data               = new stdClass();
                     $data->new_version  = $newest->name;
                     $data->package      = $newest->zipball_url;
-                    $data->plugin       = $this->config['type'] == 'plugin'  ? $this->slug . '/' . $this->slug . '.php' : ''; // Assumes that the plugin folder and plugin file have a similar name!
+                    $data->plugin       = $this->config['type'] == 'plugin'  ? $this->folder . DIRECTORY_SEPERATOR . $this->slug . '.php' : '';
                     $data->slug         = $this->slug;
                     $data->url          = $this->config['source'];
                     

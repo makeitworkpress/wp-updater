@@ -22,27 +22,47 @@ class Plugin_Updater extends Updater {
      * @param array $params The configuration parameters.
      */
     protected function initialize() {
-        
-        // Get the slug from the plugin folder
-        $folders        = explode('/', plugin_basename( __FILE__ ) );
 
-        // Something goes wrong in the folder selection
-        if( ! isset($folders[0]) ) {
+        /**
+         * Get the slug and folder for the given plugin, based on the call stack
+         */
+        $callstack = debug_backtrace();
+
+        // If this file was properly called, the file it was called by will be 2 steps back and is using the add function.
+        if( ! isset($callstack[2]) || $callstack[2]['function'] != 'add' ) {
             return;
         }
         
-        // Set-up our slug
-        $this->slug     = sanitize_title($folders[0]);
-        $file           = WP_PLUGIN_DIR . '/' . $this->slug . '/' . $this->slug . '.php';        
+        $called         = substr($callstack[2]['file'], strpos($callstack[2]['file'], 'plugins') );
+        $folders        = explode(DIRECTORY_SEPARATOR, $called);      
+
+        // We check for a matching folder and plugin data, and then we found or plugin that called this update function
+        require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+        $plugins = get_plugins();
+        foreach( $plugins as $plugin_file => $plugin_info ) {
+
+            if( strpos($plugin_file, $folders[1]) === false ) {
+                continue;
+            }
+
+            $plugin_structure   = explode( '/', $plugin_file);
+            $this->folder       = $plugin_structure[0];
+            $this->slug         = str_replace('.php', '', $plugin_structure[1]);
+            break;
+
+        }
+
+        $pluginfile  = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . $this->folder . DIRECTORY_SEPARATOR . $this->slug . '.php';
         
         // The file does not exist, woops!
-        if( ! file_exists($file) ) {
+        if( ! file_exists($pluginfile) ) {
+            $this->slug = null;
             return;
         }
 
-        // Retrieve plugin information. The assumption is that folder and plugin filename are similar.
+        // Retrieve plugin information.
         $this->plugin   = get_file_data( 
-            $file, 
+            $pluginfile, 
             ['version' => 'Version', 'name' => 'Plugin Name', 'url' => 'Plugin URI', 'description' => 'Description', 'author' => 'Author', 'author_url' => 'Author URI'] 
         );
         $this->version  = $this->plugin['version'];  // Current version of the plugin
