@@ -197,7 +197,7 @@ abstract class Updater {
                     $data               = new stdClass();
                     $data->new_version  = $newest->name;
                     $data->package      = $newest->zipball_url;
-                    $data->plugin       = $this->config['type'] == 'plugin'  ? $this->folder . DIRECTORY_SEPERATOR . $this->slug . '.php' : '';
+                    $data->plugin       = $this->config['type'] == 'plugin'  ? $this->folder . DIRECTORY_SEPARATOR . $this->slug . '.php' : '';
                     $data->slug         = $this->slug;
                     $data->url          = $this->config['source'];
                     
