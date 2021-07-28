@@ -68,7 +68,7 @@ class Plugin_Updater extends Updater {
         $this->version  = $this->plugin['version'];  // Current version of the plugin
 
         // Ads additional information for the plugin information
-        add_filter( 'plugins_api', [$this, 'pluginInfo'], 20, 3 );
+        add_filter( 'plugins_api', [$this, 'plugin_info'], 20, 3 );
         
     }
 
@@ -78,7 +78,7 @@ class Plugin_Updater extends Updater {
      * @param   $action      String The action performed
      * @param   $args        Object Object containing various data on the plugin
      */
-    public function pluginInfo( $response, $action, $args ) {
+    public function plugin_info( $response, $action, $args ) {
 
         // The right action should be performed
         if( $action !== 'plugin_information' ) {

@@ -49,12 +49,12 @@ class Boot {
         /**
          * SSL is verified by default, only supports safe updates
          */
-        add_filter( 'http_request_args', [$this, 'verifySSL'], 10, 2 );
+        add_filter( 'http_request_args', [$this, 'verify_SSL'], 10, 2 );
                       
         /** 
          * Renames the source during upgrading, so it fits the structure from WordPress
          */
-        add_filter( 'upgrader_source_selection', [$this, 'sourceSelection'] , 10, 4 );
+        add_filter( 'upgrader_source_selection', [$this, 'source_selection'] , 10, 4 );
         
     }
 
@@ -74,7 +74,8 @@ class Boot {
         ]);
 
         // Check for errors
-        $check = $this->checkConfig($config);
+        $check = $this->check_config($config);
+        
         if( is_wp_error($check) ) {
             echo $check->get_error_message();
             return;
@@ -99,7 +100,7 @@ class Boot {
      * @param String $url  The url for the request
      * @return Array $args The modified arguments
      */
-    public function verifySSL( $args, $url ) {
+    public function verify_SSL( $args, $url ) {
         $args[ 'sslverify' ] = true;
         return $args;
     }
@@ -113,7 +114,7 @@ class Boot {
      * @param array     $hook_extra     The extra hook
      * @return string   $source         The source
      */
-    public function sourceSelection( $source, $remote_source = NULL, $upgrader = NULL, $hook_extra = NULL ) {
+    public function source_selection( $source, $remote_source = NULL, $upgrader = NULL, $hook_extra = NULL ) {
 
         if( isset($source, $remote_source) ) {
 
@@ -152,7 +153,7 @@ class Boot {
      *
      * @return boolean true upon success, object WP_Error upon failure
      */
-    private function checkConfig($config) {
+    private function check_config($config) {
         
         if( $config['type'] !== 'theme' && $config['type'] !== 'plugin' ) {
             return new WP_Error( 'wrong', __( "Your updater type is not theme or plugin!", "wp-updater" ) );  
