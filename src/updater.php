@@ -57,13 +57,13 @@ abstract class Updater {
      *
      * @param array $params The configuration parameters.
      */
-    public function __construct( Array $config = [] ) {
+    public function __construct( array $config = [] ) {
         
         // Set our attributes
         $this->config   = $config;
 
         // Determines which platform we are on. Returns the given platform and also sets $this->source to the source of the download.
-        $this->platform = $this->getPlatform();        
+        $this->platform = $this->get_platform();        
         
         // Initializes the updater from the child class, and defines the slug for the theme or plugin.
         $this->initialize();
@@ -77,17 +77,17 @@ abstract class Updater {
 
         // Removes the transient or cache after ann update has executed
         if( $this->config['type'] == 'theme' ) {
-            add_filter( 'pre_set_site_transient_update_themes', [$this, 'checkUpdate'] );
-            add_action( 'delete_site_transient_update_themes', [$this, 'clearTransient'], 10, 2 );
+            add_filter( 'pre_set_site_transient_update_themes', [$this, 'check_update'] );
+            add_action( 'delete_site_transient_update_themes', [$this, 'clear_transient'], 10, 2 );
         }
 
         if( $this->config['type'] == 'plugin' ) {
-            add_filter( 'pre_set_site_transient_update_plugins', [$this, 'checkUpdate'] );
-            add_action( 'delete_site_transient_update_plugins', [$this, 'clearTransient'], 10, 2 );
+            add_filter( 'pre_set_site_transient_update_plugins', [$this, 'check_update'] );
+            add_action( 'delete_site_transient_update_plugins', [$this, 'clear_transient'], 10, 2 );
         }        
 
         // Deletes our transients if we're force-checking the updater
-        $this->clearTransientForced();
+        $this->clear_transient_forced();
         
     }
 
@@ -99,8 +99,10 @@ abstract class Updater {
     /**
      * Gets our platform based on a source url and also formats the source for the platform.
      * The source is the url where the request is made to.
+     * 
+     * @return string The platform that is used
      */
-    private function getPlatform() {
+    private function get_platform(): string {
         
         // Sets our default source, so that source is always set
         $this->source   = $this->config['source'];
@@ -132,14 +134,14 @@ abstract class Updater {
      * @param   object $transient   The transient stored for update checking
      * @return  object $transient   The transient stored for update checking
      */
-    public final function checkUpdate( $transient ) {
+    public final function check_update( $transient ) {
         
         if( empty($transient->checked) ) {
             return $transient;
         }
         
         // Request our source and compare if we have the most recent version
-        $data = $this->requestSource();
+        $data = $this->request_source();
         
         // If we are updating a theme, the slug for the theme will be used. Otherwise, the folder + plugin file is used.
         if( $data && version_compare($this->version, $data->new_version, '<') ) {
@@ -153,9 +155,9 @@ abstract class Updater {
     /**
      * Checks the source, retrieves information and formats the data retrieved to be used by the WordPress Updater.
      *
-     * @return array/boolean/object $data The data with information about the version, package and url 
+     * @return array|bool|object $data The data with information about the version, package and url 
      */
-    protected function requestSource() {
+    protected function request_source() {
         
         // Check our transient before retrieving remote updates
         $data       = get_transient( $this->transient );
@@ -223,18 +225,18 @@ abstract class Updater {
     /**
      * Clears our transient cache after updating
      */
-    public function clearTransient() {
+    public function clear_transient(): void {
         delete_transient( $this->transient );
     } 
 
     /**
      * Clears the transient when forced from the upgrader
      */
-    private function clearTransientForced() {
+    private function clear_transient_forced(): void {
 		global $pagenow;
 
 		if ( 'update-core.php' === $pagenow && isset($_GET['force-check']) ) {
-			$this->clearTransient();
+			$this->clear_transient();
 		}        
     }
 

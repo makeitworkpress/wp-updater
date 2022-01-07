@@ -12,6 +12,8 @@ class Plugin_Updater extends Updater {
     
     /**
      * Contains the information regarding the plugin
+     * 
+     * @var object
      * @access protected
      */
     protected $plugin;
@@ -21,7 +23,7 @@ class Plugin_Updater extends Updater {
      *
      * @param array $params The configuration parameters.
      */
-    protected function initialize() {
+    protected function initialize(): void {
 
         /**
          * Get the slug and folder for the given plugin, based on the call stack
@@ -74,9 +76,11 @@ class Plugin_Updater extends Updater {
 
     /**
      * Returns plugin info required for the view details screen
-     * @param   $response    Object Contains information concerning the update server
-     * @param   $action      String The action performed
-     * @param   $args        Object Object containing various data on the plugin
+     * @param   bool|array|object   $response   Contains information concerning the update server
+     * @param   string              $action     The action performed
+     * @param   object              $args       Object containing various data on the plugin
+     * 
+     * @return  bool|array|object   $response
      */
     public function plugin_info( $response, $action, $args ) {
 
