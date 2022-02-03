@@ -108,13 +108,13 @@ class Boot {
     /**
      * Updates our source selection for the upgrader
      *
-     * @param string            $source         The upgrading destination source
-     * @param string            $remote_sourc   The remote source
-     * @param object            $upgrader       The upgrader object
-     * @param array             $hook_extra     The extra hook
-     * @return string|WP_Error  $source         The source
+     * @param string                        $source         The upgrading destination source
+     * @param string                        $remote_sourc   The remote source
+     * @param WP_Upgrader|Plugin_Upgrader   $upgrader       The upgrader object
+     * @param array                         $hook_extra     The extra hook
+     * @return string|WP_Error              $source         The source
      */
-    public function source_selection( string $source, string $remote_source = NULL, WP_Upgrader $upgrader = NULL, array $hook_extra = NULL ) {
+    public function source_selection( string $source, string $remote_source = NULL, $upgrader = NULL, array $hook_extra = NULL ) {
 
         if( isset($source, $remote_source) ) {
 
