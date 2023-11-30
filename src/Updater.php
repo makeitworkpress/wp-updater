@@ -17,6 +17,12 @@ abstract class Updater {
     private $config;      
     
     /**
+     * Contains the folder for a given plugin, which is set by the Plugin_Updater child class
+     * @access public
+     */
+    public $folder;
+
+    /**
      * Contains optional parameters for the request to the remove source
      * @access private
      */
@@ -27,6 +33,12 @@ abstract class Updater {
      * @access private
      */
     private $transient;
+    
+    /**
+     * Contains the slug for the theme or plugin, which is set by the Plugin_Updater or Theme_Updater child class.
+     * @access public
+     */
+    public $slug; 
 
     /**
      * Contains the source of the theme or plugin where the api request is made to.
@@ -38,19 +50,7 @@ abstract class Updater {
      * Contains the current version of the theme or plugin, which is set by the Plugin_Updater or Theme_Updater child class.
      * @access protected
      */
-    protected $version;    
-    
-    /**
-     * Contains the slug for the theme or plugin, which is set by the Plugin_Updater or Theme_Updater child class.
-     * @access public
-     */
-    public $slug; 
-
-    /**
-     * Contains the folder for a given plugin, which is set by the Plugin_Updater child class
-     * @access public
-     */
-    public $folder;      
+    protected $version;
     
     /**
      * Constructs the class
