@@ -60,7 +60,8 @@ class Boot {
         add_filter( 'http_request_args', [$this, 'verify_SSL'], 10, 2 );
                       
         /** 
-         * Renames the source during upgrading, so it fits the structure from WordPress
+         * Renames the source during upgrading, so it fits the structure from WordPress.
+         * The name of the remote source should equal the folder name of the theme installed to properly work.
          */
         add_filter( 'upgrader_source_selection', [$this, 'source_selection'] , 10, 4 );
         
@@ -125,7 +126,7 @@ class Boot {
      */
     public function source_selection( $source, $remote_source = NULL, $upgrader = NULL, $hook_extra = NULL ) {
 
-        if( ! isset($source, $remote_source) ) {
+        if( ! isset($source, $remote_source) || ! isset($hook_extra['theme']) ) {
             return $source;
         }
 
