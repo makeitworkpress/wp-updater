@@ -86,11 +86,11 @@ class Plugin_Updater extends Updater {
 
         // The right action should be performed
         if( $action !== 'plugin_information' ) {
-            return false;
+            return $response;
         }
 
         // And only for the given plugin
-        if( $this->slug !== $args->slug ) {
+        if( ! isset($args->slug) || $this->slug !== $args->slug ) {
             return $response;  
         }  
         

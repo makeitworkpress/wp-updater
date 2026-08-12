@@ -25,7 +25,13 @@ class Theme_Updater extends Updater {
     protected function initialize(): void {
         
         $this->theme    = wp_get_theme( basename(get_template_directory()) );
-        $this->slug     = sanitize_title($this->theme->stylesheet);
+
+        /**
+         * The stylesheet is the directory name of the theme within wp-content/themes and is also
+         * the key WordPress uses within the update transient, so it is used as the slug as well.
+         */
+        $this->folder   = $this->theme->get_stylesheet();
+        $this->slug     = $this->folder;
         $this->version  = $this->theme->version;  // Current version of the theme
         
     }

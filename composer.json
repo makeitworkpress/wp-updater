@@ -3,7 +3,7 @@
     "description": "Simple class to allow WordPress theme and plugin updates over Github or Gitlab",
     "license": "GPL",
     "require": {
-        "php": ">=5.3"
+        "php": ">=7.1"
     },
     "autoload": {
         "psr-4": {
@@ -14,9 +14,8 @@
     "authors": [ 
         {
             "name": "Make it WorkPress",
-            "email": "michiel@makeitworkpress.com",
-            "homepage": "https://www.makeitworkpress.com"
-
+            "email": "hello@makeitwork.press",
+            "homepage": "https://makeitwork.press"
         } 
     ]           
 }
